@@ -16,6 +16,10 @@ return Application::configure(basePath: dirname(__DIR__))
             'jwt.auth' => \App\Http\Middleware\JwtMiddleware::class,
             'role' => \App\Http\Middleware\RoleMiddleware::class,
         ]);
+
+        $middleware->api(prepend: [
+            \App\Http\Middleware\ForceJsonResponse::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //
