@@ -8,6 +8,8 @@ use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 
 class AuthController extends Controller
 {
@@ -20,6 +22,7 @@ class AuthController extends Controller
         $data = $request->validate([
             'email' => 'required|email',
             'password' => 'required|string',
+            'remember' => 'sometimes|boolean',
         ]);
 
         $profile = Profile::where('email', $data['email'])->first();
@@ -31,7 +34,7 @@ class AuthController extends Controller
             ], 401);
         }
 
-        return $this->issueTokenPair($profile);
+        return $this->issueTokenPair($profile, (bool) ($data['remember'] ?? false));
     }
 
     public function refresh(Request $request)
@@ -107,6 +110,82 @@ class AuthController extends Controller
         );
     }
 
+    public function forgotPassword(Request $request)
+    {
+        $data = $request->validate([
+            'email' => 'required|email',
+        ]);
+
+        $profile = Profile::where('email', $data['email'])->first();
+
+        // Always respond the same way whether or not the email matched, so this endpoint
+        // can't be used to probe for the admin's account existing.
+        $generic = [
+            'status' => true,
+            'message' => 'If that email is registered, a password reset link has been sent.',
+        ];
+
+        if (!$profile) {
+            return response()->json($generic, 200);
+        }
+
+        $token = Str::random(64);
+        $profile->reset_token_hash = hash('sha256', $token);
+        $profile->reset_token_expires_at = now()->addMinutes(60);
+        $profile->save();
+
+        $resetUrl = config('services.frontend_url') . '/admin/reset-password?token=' . $token . '&email=' . urlencode($profile->email);
+
+        Mail::raw(
+            "A password reset was requested for your admin account.\n\n" .
+            "Reset your password: {$resetUrl}\n\n" .
+            "This link expires in 60 minutes. If you didn't request this, you can ignore this email.",
+            function ($message) use ($profile) {
+                $message->to($profile->email)->subject('Reset your admin password');
+            }
+        );
+
+        return response()->json($generic, 200);
+    }
+
+    public function resetPassword(Request $request)
+    {
+        $data = $request->validate([
+            'email' => 'required|email',
+            'token' => 'required|string',
+            'password' => 'required|string|min:8|confirmed',
+        ]);
+
+        $profile = Profile::where('email', $data['email'])->first();
+
+        $invalid = response()->json([
+            'status' => false,
+            'message' => 'This reset link is invalid or has expired.',
+        ], 422);
+
+        if (!$profile || !$profile->reset_token_hash || !$profile->reset_token_expires_at) {
+            return $invalid;
+        }
+
+        if ($profile->reset_token_expires_at->isPast()) {
+            return $invalid;
+        }
+
+        if (!hash_equals($profile->reset_token_hash, hash('sha256', $data['token']))) {
+            return $invalid;
+        }
+
+        $profile->password = $data['password'];
+        $profile->reset_token_hash = null;
+        $profile->reset_token_expires_at = null;
+        $profile->save();
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Password reset successfully. You can now log in.',
+        ], 200);
+    }
+
     public function me(Request $request)
     {
         $profile = Profile::find($request->attributes->get('auth_payload')->sub);
@@ -121,10 +200,16 @@ class AuthController extends Controller
         return response()->json($profile, 200);
     }
 
-    private function issueTokenPair(Profile $profile)
+    private function issueTokenPair(Profile $profile, bool $remember = true)
     {
         $accessDuration = config('services.access_token_duration');
         $refreshDuration = config('services.refresh_token_duration');
+
+        // "Remember me" off -> omit Max-Age so the cookie is session-only (cleared when the
+        // browser closes) even though the underlying JWT is still valid for the full duration
+        // server-side; on -> persist the cookie for that same duration. Passing minutes=0 to
+        // Laravel's cookie() is what produces a session cookie (see CookieJar::make).
+        $cookieMinutes = $remember ? (int) ceil($refreshDuration / 60) : 0;
 
         return response()->json([
             'status' => true,
@@ -136,7 +221,7 @@ class AuthController extends Controller
         ], 200)->cookie(
             'refresh_token',
             $this->buildRefreshToken($profile, $refreshDuration),
-            (int) ceil($refreshDuration / 60), // Cookie Max-Age is minutes; token exp is seconds.
+            $cookieMinutes,
             '/',
             null,
             app()->environment('production'), // Secure requires HTTPS - off for local http dev.

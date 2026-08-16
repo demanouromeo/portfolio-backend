@@ -27,6 +27,8 @@ class Profile extends Model
 
     protected $hidden = [
         'password',
+        'reset_token_hash',
+        'reset_token_expires_at',
     ];
 
     protected function casts(): array
@@ -34,6 +36,7 @@ class Profile extends Model
         return [
             'password' => 'hashed',
             'years_experience' => 'integer',
+            'reset_token_expires_at' => 'datetime',
         ];
     }
 }

@@ -52,4 +52,8 @@ return [
     'access_token_duration' => (int) env('ACCESS_TOKEN_DURATION', 3600),
     'refresh_token_duration' => (int) env('REFRESH_TOKEN_DURATION', 604800),
 
+    // Used to build the password-reset link mailed to the admin - the SPA route lives on
+    // the frontend origin, not this API's own APP_URL.
+    'frontend_url' => env('FRONTEND_URL', 'http://localhost:5173'),
+
 ];
