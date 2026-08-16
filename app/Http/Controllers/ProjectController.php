@@ -30,6 +30,8 @@ class ProjectController extends Controller
             'technologies.*' => 'string|max:100',
             'repo_link' => 'nullable|url|max:255',
             'video_link' => 'nullable|url|max:255',
+            'play_store_link' => 'nullable|url|max:255',
+            'apple_store_link' => 'nullable|url|max:255',
         ]);
 
         $data['sort_order'] = (int) Project::max('sort_order') + 1;
@@ -54,6 +56,8 @@ class ProjectController extends Controller
             'technologies.*' => 'string|max:100',
             'repo_link' => 'nullable|url|max:255',
             'video_link' => 'nullable|url|max:255',
+            'play_store_link' => 'nullable|url|max:255',
+            'apple_store_link' => 'nullable|url|max:255',
         ]);
 
         $project->update($data);
