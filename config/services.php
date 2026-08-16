@@ -47,4 +47,9 @@ return [
     // bootstrap-time config resolution rather than repeating it ad hoc later in the request.
     'jwt_secret' => env('JWT_SECRET'),
 
+    // Same rationale as jwt_secret above - resolved once at bootstrap rather than via env()
+    // calls scattered across AuthController.
+    'access_token_duration' => (int) env('ACCESS_TOKEN_DURATION', 3600),
+    'refresh_token_duration' => (int) env('REFRESH_TOKEN_DURATION', 604800),
+
 ];
