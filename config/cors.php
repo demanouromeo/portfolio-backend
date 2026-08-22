@@ -21,8 +21,6 @@ return [
 
     //'allowed_origins' => ['*'],
     'allowed_origins' => [
-        'https://dmseduc.netlify.app',
-        'https://educ.dmsacad.com',
         'http://localhost:5173',
         'http://localhost:5174',
         'https://portfolio.dmsacad.com',
@@ -31,8 +29,7 @@ return [
         // WebView serves the app from these fixed origins regardless of what backend target
         // ("remote"/"local") the user picks in-app, so both must be whitelisted for the
         // mobile app to ever reach either backend in CORS-enforced (i.e. non-Android-WebView-
-        // exempt) request paths.
-        'https://localhost',
+        // exempt) request paths. 
         'capacitor://localhost',
         'http://localhost',
     ],
