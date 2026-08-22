@@ -30,6 +30,7 @@ class ProjectController extends Controller
             'technologies.*' => 'string|max:100',
             'repo_link' => 'nullable|url|max:255',
             'video_link' => 'nullable|url|max:255',
+            'website_link' => 'nullable|url|max:255',
             'play_store_link' => 'nullable|url|max:255',
             'apple_store_link' => 'nullable|url|max:255',
         ]);
@@ -56,6 +57,7 @@ class ProjectController extends Controller
             'technologies.*' => 'string|max:100',
             'repo_link' => 'nullable|url|max:255',
             'video_link' => 'nullable|url|max:255',
+            'website_link' => 'nullable|url|max:255',
             'play_store_link' => 'nullable|url|max:255',
             'apple_store_link' => 'nullable|url|max:255',
         ]);
@@ -147,6 +149,7 @@ class ProjectController extends Controller
 
         $image = $project->demoImages()->create([
             'path' => MyHelper::storeUpload($request->file('image'), 'projects/demo-images'),
+            'original_name' => $request->file('image')->getClientOriginalName(),
             'sort_order' => (int) $project->demoImages()->max('sort_order') + 1,
         ]);
 

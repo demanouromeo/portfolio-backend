@@ -15,6 +15,7 @@ class Project extends Model
         'technologies',
         'repo_link',
         'video_link',
+        'website_link',
         'play_store_link',
         'apple_store_link',
         'sort_order',

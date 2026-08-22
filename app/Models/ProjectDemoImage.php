@@ -10,6 +10,7 @@ class ProjectDemoImage extends Model
     protected $fillable = [
         'project_id',
         'path',
+        'original_name',
         'sort_order',
     ];
 

@@ -48,6 +48,8 @@ class ProfileController extends Controller
             'city' => 'nullable|string|max:100',
             'short_intro_fr' => 'required|string',
             'short_intro_en' => 'required|string',
+            'resume_fr' => 'nullable|string',
+            'resume_en' => 'nullable|string',
             'profile_picture' => 'nullable|file|mimes:jpeg,png,jpg,webp|max:2048',
         ]);
 

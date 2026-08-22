@@ -23,6 +23,8 @@ class Profile extends Model
         'profile_picture_path',
         'short_intro_fr',
         'short_intro_en',
+        'resume_fr',
+        'resume_en',
     ];
 
     protected $hidden = [
